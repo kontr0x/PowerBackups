@@ -50,6 +50,8 @@ Class DirToBackup{
 # Change the following variables to suit your needs:
 #
 
+$minimizeOutput = $true
+
 $dirsToBackup = @(
     New-Object DirToBackup "C:\Example\Path"
 )
@@ -111,11 +113,28 @@ $dirsToBackup | ForEach-Object {
     $progressParams.Status = "Progress: $percentComplete% ($copiedItems/$totalItems)"
     Write-Progress @progressParams
 
+    # Tmp variables
+    $headerComplete = $false
+
     # Backup files
     mkdir -Path $($pathToBackup + $_.path) -Force
     robocopy $($_.fullPath) $($pathToBackup + $_.path) /E /Z /R:0 /W:0 /TEE /LOG+:$($pathToLogs + $logFile) /XO /XD $defaultListOfExcludedFolders /XF $defaultFileExcludeList | ForEach-Object {
-        if(-not ($_.Contains("%")) ){
-            Write-Host $_
+        if( ($minimizeOutput -eq $true) ){
+            if($headerComplete -eq $false){
+                Write-Host $_
+                if( ($_.Contains("Options :")) ){
+                    $headerComplete = $true
+                    Write-Host "`n$("-"*79)"
+                }
+            }else{
+                if( ($_.Contains("New")) ){
+                    Write-Host $_
+                }
+            }
+        }else{
+            if(-not ($_.Contains("%")) ){
+                Write-Host $_
+            }
         }
     }
 
